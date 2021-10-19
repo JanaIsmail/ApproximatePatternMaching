@@ -90,6 +90,8 @@ __device__ int levenshtein(char *s1, char *s2, int len, int *column) {
 __global__ void processing(int size_pattern, char * pattern, int* column, int n_bytes, int approx_factor, char *buf, int *n_matches_j ){
   int j = blockIdx.x*blockDim.x + threadIdx.x;
 
+  
+
   int distance = 0;
       int size;
       size = size_pattern;
@@ -106,6 +108,8 @@ __global__ void processing(int size_pattern, char * pattern, int* column, int n_
 
       }
       else{n_matches_j[j] = 0;}
+
+      printf("Noyau : j : %d, n_match : %d\n", j, n_matches_j[j]);
 
 
 
@@ -224,7 +228,7 @@ int main(int argc, char **argv) {
     cudaMemcpy(n_matches_j, gpu_n_matches_j ,(n_bytes) * sizeof(int), cudaMemcpyDeviceToHost) ;
 
     for(int j=0; j<n_bytes; j++){
-      printf("Valeur de n_matches_j : %d\n", n_matches_j[j]);
+      printf("Pas Noyau : j : %d, n_match : %d\n", j, n_matches_j[j]);
       n_matches[i]+=n_matches_j[j];
     }
     
