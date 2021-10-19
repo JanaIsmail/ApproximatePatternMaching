@@ -219,7 +219,7 @@ int main(int argc, char **argv) {
     cudaMalloc((void **) &gpu_n_matches_j, (n_bytes) * sizeof(int));
 
     cudaMemcpy(gpu_pattern, pattern[i],(size_pattern) * sizeof(char), cudaMemcpyHostToDevice );
-    cudaMemcpy(gpu_buf, buf,(n_bytes) * sizeof(char), cudaMemcpyHostToDevice );
+    cudaMemcpyToSymbol(gpu_buf, buf,(n_bytes) * sizeof(char));
     cudaMemcpy(gpu_n_matches_j,n_matches_j, (n_bytes) * sizeof(int), cudaMemcpyHostToDevice );
 
 
