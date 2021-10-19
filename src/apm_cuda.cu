@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <math.h>
 
 #include <cuda.h>                                                               
 #include <cuda_runtime.h>                                                       
@@ -223,12 +224,14 @@ int main(int argc, char **argv) {
 
     int blocksize = 1024;
 
+    int real_blocksize = MIN3(blocksize, blocksize, n_bytes);
+
     dim3 dimBlock (blocksize);
     dim3 dimGrid(ceil((n_bytes/(float)blocksize)));
 
     int test = ceil((n_bytes/(float)blocksize));
 
-    printf("test : %d", test);
+    printf("test : %d\n", test);
   
     processing<<<dimGrid, dimBlock>>>(size_pattern, gpu_pattern, gpu_column, n_bytes, approx_factor, gpu_buf, gpu_n_matches_j);
 
