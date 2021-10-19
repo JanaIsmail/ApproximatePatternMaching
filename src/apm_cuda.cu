@@ -71,7 +71,7 @@ char *read_input_file(char *filename, int *size) {
 
 __device__ int levenshtein(char *s1, char *s2, int len, int *column) {
 
-printf("Helloooo\n");
+//printf("Helloooo\n");
   unsigned int x, y, lastdiag, olddiag;
 
   for (y = 1; y <= len; y++) {
@@ -86,7 +86,9 @@ printf("Helloooo\n");
       lastdiag = olddiag;
     }
   }
+  printf("Good Byyyyye\n");
   return (column[len]);
+
 }
 
 
@@ -226,7 +228,7 @@ int main(int argc, char **argv) {
 
     int real_blocksize = MIN3(blocksize, blocksize, n_bytes);
 
-    dim3 dimBlock (blocksize);
+    dim3 dimBlock (real_blocksize);
     dim3 dimGrid(ceil((n_bytes/(float)blocksize)));
 
     int test = ceil((n_bytes/(float)blocksize));
