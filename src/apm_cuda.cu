@@ -99,8 +99,6 @@ __global__ void processing(int size_pattern, char * pattern, int* column, int n_
         size = n_bytes - j;
       }
 
-
-
       distance = levenshtein(pattern, &buf[j], size, column);
 
       if (distance <= approx_factor) {
@@ -198,6 +196,13 @@ int main(int argc, char **argv) {
   for (i = 0; i < nb_patterns; i++) {
 
     int size_pattern = strlen(pattern[i]);
+    
+    int * n_matches_j = (int*) malloc((n_bytes) * sizeof(int));
+
+     for(int j=0; j<n_bytes; j++){
+      n_matches[i]=0;
+    }
+    
 
     int *gpu_column, *gpu_n_matches_j;
 
@@ -213,7 +218,7 @@ int main(int argc, char **argv) {
     cudaMemcpy(gpu_pattern, pattern[i],(size_pattern) * sizeof(char), cudaMemcpyHostToDevice );
     cudaMemcpy(gpu_buf, buf,(n_bytes) * sizeof(char), cudaMemcpyHostToDevice );
     //cudaMemcpy(gpu_column, (size_pattern + 1) * sizeof(int), cudaMemcpyHostToDevice );
-    //cudaMemcpy(gpu_n_matches_j, (n_bytes) * sizeof(int), cudaMemcpyHostToDevice );
+    cudaMemcpy(gpu_n_matches_j,n_matches_j, (n_bytes) * sizeof(int), cudaMemcpyHostToDevice );
 
 
     int blocksize = 1024;
@@ -223,7 +228,7 @@ int main(int argc, char **argv) {
   
     processing<<<dimGrid, dimBlock>>>(size_pattern, gpu_pattern, gpu_column, n_bytes, approx_factor, gpu_buf, gpu_n_matches_j);
 
-    int * n_matches_j = (int*) malloc((n_bytes) * sizeof(int));
+    
 
     cudaMemcpy(n_matches_j, gpu_n_matches_j ,(n_bytes) * sizeof(int), cudaMemcpyDeviceToHost) ;
 
