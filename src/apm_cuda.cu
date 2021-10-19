@@ -213,7 +213,7 @@ int main(int argc, char **argv) {
     dim3 dimBlock (blocksize);
     dim3 dimGrid(ceil((n_bytes/(float)blocksize)));
   
-    processing<<<dimGrid, dimBlock>>>(gpu_pattern, gpu_column, n_bytes, approx_factor, gpu_buf, gpu_n_matches_j);
+    processing<<<dimGrid, dimBlock>>>(size_pattern, gpu_pattern, gpu_column, n_bytes, approx_factor, gpu_buf, gpu_n_matches_j);
 
     int * n_matches_j = (int*) malloc((n_bytes) * sizeof(int));
 
