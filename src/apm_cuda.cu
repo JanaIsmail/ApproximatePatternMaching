@@ -71,7 +71,6 @@ char *read_input_file(char *filename, int *size) {
 
 __device__ int levenshtein(char *s1, char *s2, int len, int *column) {
 
-//printf("Helloooo\n");
   unsigned int x, y, lastdiag, olddiag;
 
   for (y = 1; y <= len; y++) {
@@ -86,8 +85,7 @@ __device__ int levenshtein(char *s1, char *s2, int len, int *column) {
       lastdiag = olddiag;
     }
   }
-  printf("column : %d\n", column[len]);
-  return (column[len]);
+    return (column[len]);
 
 }
 
@@ -110,8 +108,6 @@ __global__ void processing(int size_pattern, char * pattern, int n_bytes, int ap
 
     }
     else{n_matches_j[j] = 0;}
-
-    printf("Noyau : j : %d, n_matches : %d,  distance : %d  \n", j, n_matches_j[j], distance );
 
     free(column);
 
@@ -217,12 +213,10 @@ int main(int argc, char **argv) {
 
     cudaMalloc((void **) &gpu_pattern, (size_pattern) * sizeof(char));
     cudaMalloc((void **) &gpu_buf, (n_bytes) * sizeof(char));
-    //cudaMalloc((void **) &gpu_column, (size_pattern + 1) * sizeof(int));
     cudaMalloc((void **) &gpu_n_matches_j, (n_bytes) * sizeof(int));
 
     cudaMemcpy(gpu_pattern, pattern[i],(size_pattern) * sizeof(char), cudaMemcpyHostToDevice );
     cudaMemcpy(gpu_buf, buf,(n_bytes) * sizeof(char), cudaMemcpyHostToDevice );
-    //cudaMemcpy(gpu_column, (size_pattern + 1) * sizeof(int), cudaMemcpyHostToDevice );
     cudaMemcpy(gpu_n_matches_j,n_matches_j, (n_bytes) * sizeof(int), cudaMemcpyHostToDevice );
 
 
@@ -234,8 +228,6 @@ int main(int argc, char **argv) {
     dim3 dimGrid(ceil((n_bytes/(float)blocksize)));
 
     int test = ceil((n_bytes/(float)blocksize));
-
-    printf("test : %d\n", test);
   
     processing<<<dimGrid, dimBlock>>>(size_pattern, gpu_pattern, n_bytes, approx_factor, gpu_buf, gpu_n_matches_j);
 
@@ -244,12 +236,10 @@ int main(int argc, char **argv) {
     cudaMemcpy(n_matches_j, gpu_n_matches_j ,(n_bytes) * sizeof(int), cudaMemcpyDeviceToHost) ;
 
     for(int j=0; j<n_bytes; j++){
-      printf("Pas Noyau : j : %d, n_match : %d\n", j, n_matches_j[j]);
-      n_matches[i]+=n_matches_j[j];
+          n_matches[i]+=n_matches_j[j];
     }
     
 
-   // cudaFree(gpu_column);
     cudaFree(gpu_pattern);
     cudaFree(gpu_buf);
     cudaFree(gpu_n_matches_j);
