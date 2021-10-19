@@ -89,8 +89,9 @@ __device__ int levenshtein(char *s1, char *s2, int len, int *column) {
 
 }
 
+__device__ char * gpu_buf;
 
-__global__ void processing(int size_pattern, char * pattern, int n_bytes, int approx_factor, char *buf, int *n_matches_j ){
+__global__ void processing(int size_pattern, char * pattern, int n_bytes, int approx_factor, int *n_matches_j ){
     int j = blockIdx.x*blockDim.x + threadIdx.x;
 
     if(j<n_bytes){
@@ -102,7 +103,7 @@ __global__ void processing(int size_pattern, char * pattern, int n_bytes, int ap
       size = n_bytes - j;
     }
 
-    distance = levenshtein(pattern, &buf[j], size, column);
+    distance = levenshtein(pattern, &gpu_buf[j], size, column);
 
     if (distance <= approx_factor) {
       n_matches_j[j] = 1;
@@ -211,7 +212,7 @@ int main(int argc, char **argv) {
 
     n_matches[i] = 0;
 
-    char * gpu_pattern, * gpu_buf;
+    char * gpu_pattern; //, * gpu_buf;
 
     cudaMalloc((void **) &gpu_pattern, (size_pattern) * sizeof(char));
     cudaMalloc((void **) &gpu_buf, (n_bytes) * sizeof(char));
