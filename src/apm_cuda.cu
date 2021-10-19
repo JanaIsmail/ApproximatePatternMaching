@@ -86,7 +86,7 @@ __device__ int levenshtein(char *s1, char *s2, int len, int *column) {
       lastdiag = olddiag;
     }
   }
-  printf("Good Byyyyye\n");
+  printf("column : %d\n", column[len]);
   return (column[len]);
 
 }
@@ -110,7 +110,7 @@ __global__ void processing(int size_pattern, char * pattern, int* column, int n_
     }
     else{n_matches_j[j] = 0;}
 
-    printf("Noyau : j : %d, n_match : %d\n", j, n_matches_j[j]);
+    printf("Noyau : j : %d, n_matches : %d,  distance : %d  \n", j, n_matches_j[j], distance );
 
 
 
