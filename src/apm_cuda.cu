@@ -103,8 +103,11 @@ __global__ void processing(int size_pattern, char * pattern, int* column, int n_
 
       if (distance <= approx_factor) {
         n_matches_j[j] = 1;
+
       }
       else{n_matches_j[j] = 0;}
+
+
 
 }
 
@@ -221,6 +224,7 @@ int main(int argc, char **argv) {
     cudaMemcpy(n_matches_j, gpu_n_matches_j ,(n_bytes) * sizeof(int), cudaMemcpyDeviceToHost) ;
 
     for(int j=0; j<n_bytes; j++){
+      printf("Valeur de n_matches_j : %d\n", n_matches_j[j]);
       n_matches[i]+=n_matches_j[j];
     }
     
