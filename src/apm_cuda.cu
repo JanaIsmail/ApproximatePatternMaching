@@ -232,7 +232,7 @@ int main(int argc, char **argv) {
 
     int test = ceil((n_bytes/(float)blocksize));
   
-    processing<<<dimGrid, dimBlock>>>(size_pattern, gpu_pattern, n_bytes, approx_factor, gpu_buf, gpu_n_matches_j);
+    processing<<<dimGrid, dimBlock>>>(size_pattern, gpu_pattern, n_bytes, approx_factor,  gpu_n_matches_j);
 
     
 
