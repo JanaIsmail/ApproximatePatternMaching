@@ -102,8 +102,9 @@ __global__ void processing(int size_pattern, char * pattern, int* column, int n_
       distance = levenshtein(pattern, &buf[j], size, column);
 
       if (distance <= approx_factor) {
-        n_matches_j[j]++;
+        n_matches_j[j] = 1;
       }
+      else{n_matches_j[j] = 0;}
 
 }
 
