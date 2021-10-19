@@ -225,6 +225,10 @@ int main(int argc, char **argv) {
 
     dim3 dimBlock (blocksize);
     dim3 dimGrid(ceil((n_bytes/(float)blocksize)));
+
+    int test = ceil((n_bytes/(float)blocksize));
+
+    printf("test : %d", test);
   
     processing<<<dimGrid, dimBlock>>>(size_pattern, gpu_pattern, gpu_column, n_bytes, approx_factor, gpu_buf, gpu_n_matches_j);
 
