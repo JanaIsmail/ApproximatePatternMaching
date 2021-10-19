@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
   char *filename;
   int approx_factor = 0;
   int nb_patterns = 0;
-  int i, j;
+  int i;
   char *buf;
   struct timeval t1, t2;
   double duration;
@@ -196,7 +196,7 @@ int main(int argc, char **argv) {
 
     n_matches[i] = 0;
 
-    char * gpu_pattern, gpu_buf;
+    char * gpu_pattern, * gpu_buf;
 
     cudaMalloc((void **) &gpu_pattern, (size_pattern) * sizeof(char));
     cudaMalloc((void **) &gpu_buf, (n_bytes) * sizeof(char));
@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
     int blocksize = 1024;
 
     dim3 dimBlock (blocksize);
-    dim3 dimGrid(ceil((n_bytes/(float)blocksize));
+    dim3 dimGrid(ceil((n_bytes/(float)blocksize)));
   
     processing<<<dimGrid, dimBlock>>>(gpu_pattern, gpu_column, n_bytes, approx_factor, gpu_buf, gpu_n_matches_j);
 
