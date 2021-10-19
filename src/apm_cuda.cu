@@ -87,12 +87,11 @@ __device__ int levenshtein(char *s1, char *s2, int len, int *column) {
 }
 
 
-__global__ void processing(char * pattern, int* column, int n_bytes, int approx_factor, char *buf, int *n_matches_j ){
+__global__ void processing(int size_pattern, char * pattern, int* column, int n_bytes, int approx_factor, char *buf, int *n_matches_j ){
   int j = blockIdx.x*blockDim.x + threadIdx.x;
 
   int distance = 0;
       int size;
-      int size_pattern = strlen(pattern);
       size = size_pattern;
       if (n_bytes - j < size_pattern) {
         size = n_bytes - j;
