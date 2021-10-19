@@ -70,6 +70,8 @@ char *read_input_file(char *filename, int *size) {
   ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
 
 __device__ int levenshtein(char *s1, char *s2, int len, int *column) {
+
+printf("Helloooo\n");
   unsigned int x, y, lastdiag, olddiag;
 
   for (y = 1; y <= len; y++) {
@@ -89,26 +91,24 @@ __device__ int levenshtein(char *s1, char *s2, int len, int *column) {
 
 
 __global__ void processing(int size_pattern, char * pattern, int* column, int n_bytes, int approx_factor, char *buf, int *n_matches_j ){
-  int j = blockIdx.x*blockDim.x + threadIdx.x;
+    int j = blockIdx.x*blockDim.x + threadIdx.x;
 
-  
+    int distance = 0;
+    int size;
+    size = size_pattern;
+    if (n_bytes - j < size_pattern) {
+      size = n_bytes - j;
+    }
 
-  int distance = 0;
-      int size;
-      size = size_pattern;
-      if (n_bytes - j < size_pattern) {
-        size = n_bytes - j;
-      }
+    distance = levenshtein(pattern, &buf[j], size, column);
 
-      distance = levenshtein(pattern, &buf[j], size, column);
+    if (distance <= approx_factor) {
+      n_matches_j[j] = 1;
 
-      if (distance <= approx_factor) {
-        n_matches_j[j] = 1;
+    }
+    else{n_matches_j[j] = 0;}
 
-      }
-      else{n_matches_j[j] = 0;}
-
-      printf("Noyau : j : %d, n_match : %d\n", j, n_matches_j[j]);
+    printf("Noyau : j : %d, n_match : %d\n", j, n_matches_j[j]);
 
 
 
