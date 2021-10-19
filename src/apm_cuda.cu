@@ -92,12 +92,13 @@ __device__ int levenshtein(char *s1, char *s2, int len, int *column) {
 }
 
 
-__global__ void processing(int size_pattern, char * pattern, int* column, int n_bytes, int approx_factor, char *buf, int *n_matches_j ){
+__global__ void processing(int size_pattern, char * pattern, int n_bytes, int approx_factor, char *buf, int *n_matches_j ){
     int j = blockIdx.x*blockDim.x + threadIdx.x;
 
     int distance = 0;
     int size;
     size = size_pattern;
+    int * column = (int*) malloc((size_pattern + 1) * sizeof(int)); 
     if (n_bytes - j < size_pattern) {
       size = n_bytes - j;
     }
@@ -112,6 +113,7 @@ __global__ void processing(int size_pattern, char * pattern, int* column, int n_
 
     printf("Noyau : j : %d, n_matches : %d,  distance : %d  \n", j, n_matches_j[j], distance );
 
+    free(column);
 
 
 }
@@ -207,7 +209,7 @@ int main(int argc, char **argv) {
     }
     
 
-    int *gpu_column, *gpu_n_matches_j;
+    int  *gpu_n_matches_j;
 
     n_matches[i] = 0;
 
@@ -215,7 +217,7 @@ int main(int argc, char **argv) {
 
     cudaMalloc((void **) &gpu_pattern, (size_pattern) * sizeof(char));
     cudaMalloc((void **) &gpu_buf, (n_bytes) * sizeof(char));
-    cudaMalloc((void **) &gpu_column, (size_pattern + 1) * sizeof(int));
+    //cudaMalloc((void **) &gpu_column, (size_pattern + 1) * sizeof(int));
     cudaMalloc((void **) &gpu_n_matches_j, (n_bytes) * sizeof(int));
 
     cudaMemcpy(gpu_pattern, pattern[i],(size_pattern) * sizeof(char), cudaMemcpyHostToDevice );
@@ -235,7 +237,7 @@ int main(int argc, char **argv) {
 
     printf("test : %d\n", test);
   
-    processing<<<dimGrid, dimBlock>>>(size_pattern, gpu_pattern, gpu_column, n_bytes, approx_factor, gpu_buf, gpu_n_matches_j);
+    processing<<<dimGrid, dimBlock>>>(size_pattern, gpu_pattern, n_bytes, approx_factor, gpu_buf, gpu_n_matches_j);
 
     
 
@@ -247,7 +249,7 @@ int main(int argc, char **argv) {
     }
     
 
-    cudaFree(gpu_column);
+   // cudaFree(gpu_column);
     cudaFree(gpu_pattern);
     cudaFree(gpu_buf);
     cudaFree(gpu_n_matches_j);
