@@ -193,24 +193,29 @@ int main(int argc, char **argv) {
     free(column);
  
 
-  if(i!=0){
-    MPI_Send(&n_matches, 1, MPI_INT, 0, i, MPI_COMM_WORLD);
-  }
-  else{
-
-    int n_matches_total[nb_patterns];
-
-    int n_matches_foreign;
-
-    n_matches_total[0] = n_matches;
-
-    for(int k=1; k<nb_patterns; k++){
-      MPI_Recv(&n_matches_foreign, 1, MPI_INT, k, k, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-      n_matches_total[k]=n_matches_foreign;
-    }
+//  if(i!=0){
+//    MPI_Send(&n_matches, 1, MPI_INT, 0, i, MPI_COMM_WORLD);
+//  }
   
 
+//    int n_matches_total[nb_patterns];
+//
+//    int n_matches_foreign;
+//
+//    n_matches_total[0] = n_matches;
+//
+//    for(int k=1; k<nb_patterns; k++){
+//      MPI_Recv(&n_matches_foreign, 1, MPI_INT, k, k, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+//
+//      n_matches_total[k]=n_matches_foreign;
+//    }
+//  
+//
+  
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if(i==0){
+  
 
   /* Timer stop */
   gettimeofday(&t2, NULL);
@@ -219,12 +224,14 @@ int main(int argc, char **argv) {
 
   printf("APM done in %lf s\n", duration);
 
+  }
+
   /*****
    * END MAIN LOOP
    ******/
     
 
-  }
+
 
 
   printf("Number of matches for pattern <%s>: %d\n", pattern,n_matches);
