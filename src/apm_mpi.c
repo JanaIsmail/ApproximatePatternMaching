@@ -223,9 +223,9 @@ int main(int argc, char **argv) {
    * END MAIN LOOP
    ******/
     
-  for (i = 0; i < nb_patterns; i++) {
-    printf("Number of matches for pattern <%s>: %d\n", pattern[i],
-           n_matches);
+  for (int k = 0; k < nb_patterns; k++) {
+    printf("Number of matches for pattern <%s>: %d\n", p[k],
+           n_matches_total[k]);
   }
 
   }
