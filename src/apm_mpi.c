@@ -9,6 +9,8 @@
 #include <string.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <mpi.h>
+
 
 #define APM_DEBUG 0
 
@@ -83,7 +85,8 @@ int levenshtein(char *s1, char *s2, int len, int *column) {
 }
 
 int main(int argc, char **argv) {
-  char **pattern;
+  char **p;
+  char *pattern;
   char *filename;
   int approx_factor = 0;
   int nb_patterns = 0;
@@ -92,7 +95,10 @@ int main(int argc, char **argv) {
   struct timeval t1, t2;
   double duration;
   int n_bytes;
-  int *n_matches;
+  int n_matches;
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &i);
+
 
   /* Check number of arguments */
   if (argc < 4) {
@@ -111,16 +117,9 @@ int main(int argc, char **argv) {
   /* Get the number of patterns that the user wants to search for */
   nb_patterns = argc - 3;
 
-  /* Fill the pattern array */
-  pattern = (char **)malloc(nb_patterns * sizeof(char *));
-  if (pattern == NULL) {
-    fprintf(stderr, "Unable to allocate array of pattern of size %d\n",
-            nb_patterns);
-    return 1;
-  }
+  p = (char **)malloc(nb_patterns * sizeof(char *));
 
   /* Grab the patterns */
-  for (i = 0; i < nb_patterns; i++) {
     int l;
 
     l = strlen(argv[i + 3]);
@@ -129,14 +128,16 @@ int main(int argc, char **argv) {
       return 1;
     }
 
-    pattern[i] = (char *)malloc((l + 1) * sizeof(char));
-    if (pattern[i] == NULL) {
-      fprintf(stderr, "Unable to allocate string of size %d\n", l);
-      return 1;
-    }
-
-    strncpy(pattern[i], argv[i + 3], (l + 1));
+  pattern = (char *)malloc((l + 1) * sizeof(char));
+  /* Fill the pattern array */
+  if (pattern == NULL) {
+    fprintf(stderr, "Unable to allocate pattern of size %d\n",
+            l);
+    return 1;
   }
+  strncpy(pattern, argv[i + 3], (l + 1));
+
+  p[i] = pattern;
 
   printf("Approximate Pattern Mathing: "
          "looking for %d pattern(s) in file %s w/ distance of %d\n",
@@ -147,14 +148,6 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  /* Allocate the array of matches */
-  n_matches = (int *)malloc(nb_patterns * sizeof(int));
-  if (n_matches == NULL) {
-    fprintf(stderr, "Error: unable to allocate memory for %ldB\n",
-            nb_patterns * sizeof(int));
-    return 1;
-  }
-
   /*****
    * BEGIN MAIN LOOP
    ******/
@@ -162,13 +155,11 @@ int main(int argc, char **argv) {
   /* Timer start */
   gettimeofday(&t1, NULL);
 
-  for (i = 0; i < nb_patterns; i++) {
-
-    int size_pattern = strlen(pattern[i]);
+    int size_pattern = strlen(pattern);
 
     int *column;
 
-    n_matches[i] = 0;
+    n_matches = 0;
 
     column = (int *)malloc((size_pattern + 1) * sizeof(int));
     if (column == NULL) {
@@ -192,15 +183,34 @@ int main(int argc, char **argv) {
         size = n_bytes - j;
       }
 
-      distance = levenshtein(pattern[i], &buf[j], size, column);
+      distance = levenshtein(pattern, &buf[j], size, column);
 
       if (distance <= approx_factor) {
-        n_matches[i]++;
+        n_matches++;
       }
     }
 
     free(column);
+ 
+
+  if(i!=0){
+    MPI_Send(&n_matches, 1, MPI_INT, 0, i, MPI_COMM_WORLD);
   }
+  else{
+
+    int n_matches_total[nb_patterns];
+
+    int n_matches_foreign;
+
+    n_matches_total[0] = n_matches;
+
+    for(int k=1; k<nb_patterns; k++){
+      MPI_Recv(&n_matches_foreign, 1, MPI_INT, k, k, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+      n_matches_total[k]=n_matches_foreign;
+    }
+  }
+
 
   /* Timer stop */
   gettimeofday(&t2, NULL);
@@ -215,7 +225,7 @@ int main(int argc, char **argv) {
     
   for (i = 0; i < nb_patterns; i++) {
     printf("Number of matches for pattern <%s>: %d\n", pattern[i],
-           n_matches[i]);
+           n_matches);
   }
 
   return 0;
