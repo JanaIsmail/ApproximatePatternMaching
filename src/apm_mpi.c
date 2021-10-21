@@ -137,11 +137,11 @@ int main(int argc, char **argv) {
   }
   strncpy(pattern, argv[i + 3], (l + 1));
 
-  p[i] = pattern;
-
+  if (i=0){
   printf("Approximate Pattern Mathing: "
          "looking for %d pattern(s) in file %s w/ distance of %d\n",
          nb_patterns, filename, approx_factor);
+  }
 
   buf = read_input_file(filename, &n_bytes);
   if (buf == NULL) {
@@ -223,12 +223,11 @@ int main(int argc, char **argv) {
    * END MAIN LOOP
    ******/
     
-  for (int k = 0; k < nb_patterns; k++) {
-    printf("Number of matches for pattern <%s>: %d\n", p[k],
-           n_matches_total[k]);
-  }
 
   }
+
+
+    printf("Number of matches for pattern <%s>: %d\n", pattern,n_matches);
 
   MPI_Finalize();
 
