@@ -209,7 +209,7 @@ int main(int argc, char **argv) {
 
       n_matches_total[k]=n_matches_foreign;
     }
-  }
+  
 
 
   /* Timer stop */
@@ -227,6 +227,10 @@ int main(int argc, char **argv) {
     printf("Number of matches for pattern <%s>: %d\n", pattern[i],
            n_matches);
   }
+
+  }
+
+  MPI_Finalize();
 
   return 0;
 }
