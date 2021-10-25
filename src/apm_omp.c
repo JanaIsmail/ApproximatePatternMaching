@@ -168,17 +168,12 @@ int main(int argc, char **argv) {
     int size_pattern = strlen(pattern[i]);
     int n_matches_j = 0;
     omp_set_num_threads(2);
-#pragma omp parallel reduction(+:n_matches_j) 
     n_matches[i] = 0;
+#pragma omp parallel reduction(+:n_matches_j) 
     {
     int *column;
 
     column = (int *)malloc((size_pattern + 1) * sizeof(int));
-    if (column == NULL) {
-      fprintf(stderr, "Error: unable to allocate memory for column (%ldB)\n",
-              (size_pattern + 1) * sizeof(int));
-      return 1;
-    }
 #pragma omp for 
     for (int j = 0; j < n_bytes; j++) {
       int distance = 0;
