@@ -166,22 +166,21 @@ int main(int argc, char **argv) {
   for (i = 0; i < nb_patterns; i++) {
 
     int size_pattern = strlen(pattern[i]);
-
+    int n_matches_j = 0;
+    omp_set_num_threads(2);
+#pragma omp parallel reduction(+:n_matches_j) 
+    n_matches[i] = 0;
+    {
     int *column;
 
-    n_matches[i] = 0;
-
-    //column = (int *)malloc((size_pattern + 1) * sizeof(int));
+    column = (int *)malloc((size_pattern + 1) * sizeof(int));
     if (column == NULL) {
       fprintf(stderr, "Error: unable to allocate memory for column (%ldB)\n",
               (size_pattern + 1) * sizeof(int));
       return 1;
     }
-    int n_matches_j = 0;
-    omp_set_num_threads(2);
-#pragma omp parallel for reduction(+:n_matches_j) private(column)
+#pragma omp for 
     for (int j = 0; j < n_bytes; j++) {
-      column = (int *)malloc((size_pattern + 1) * sizeof(int));
       int distance = 0;
       int size;
 
@@ -202,11 +201,12 @@ int main(int argc, char **argv) {
         n_matches_j++;
       }
 
+    }
+
     free(column);
     }
-    n_matches[i]  = n_matches_j;
 
-//    free(column);
+    n_matches[i]  = n_matches_j;
   }
 
   /* Timer stop */
