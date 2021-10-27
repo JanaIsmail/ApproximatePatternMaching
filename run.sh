@@ -73,4 +73,7 @@ done
 cd $path
 printf "\n" >> output
 
-cat output
+cat output | sed -e "s/   /,/g" >> output.csv
+
+
+
