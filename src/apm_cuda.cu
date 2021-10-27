@@ -96,10 +96,6 @@ __device__ int levenshtein(char *s1, char* gpu_buf, int len, int *column, int j)
 __global__ void processing(int size_pattern, char * pattern, int n_bytes,char * gpu_buf, int approx_factor, int *n_matches_j ){
     //printf("HELLO\n");
     int j = blockIdx.x*blockDim.x + threadIdx.x;
-    if(j<10){
-      printf("%c %d  ",gpu_buf[j],  j);
-      printf("test");
-    }
 
     if(j<n_bytes){
     int distance = 0;
@@ -121,9 +117,16 @@ __global__ void processing(int size_pattern, char * pattern, int n_bytes,char * 
     free(column);
 
     }
-
-
 }
+
+__global__ void warm_up_gpu(){
+  unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;
+  float ia, ib;
+  ia = ib = 0.0f;
+  ib += ia + tid; 
+}
+
+
 
 int main(int argc, char **argv) {
   char **pattern;
@@ -202,6 +205,19 @@ int main(int argc, char **argv) {
    * BEGIN MAIN LOOP
    ******/
 
+
+  int blocksize = 1024;
+
+  int real_blocksize = MIN3(blocksize, blocksize, n_bytes);
+
+  dim3 dimBlock (real_blocksize);
+  dim3 dimGrid(ceil((n_bytes/(float)blocksize)));
+
+
+
+  warm_up_gpu<<<dimGrid, dimBlock>>>();
+
+
   /* Timer start */
   gettimeofday(&t1, NULL);
 
@@ -238,13 +254,6 @@ int main(int argc, char **argv) {
     //cudaMemcpy(gpu_buf, buf,(n_bytes) * sizeof(char), cudaMemcpyHostToDevice);
     cudaMemcpy(gpu_n_matches_j,n_matches_j, (n_bytes) * sizeof(int), cudaMemcpyHostToDevice );
 
-
-    int blocksize = 1024;
-
-    int real_blocksize = MIN3(blocksize, blocksize, n_bytes);
-
-    dim3 dimBlock (real_blocksize);
-    dim3 dimGrid(ceil((n_bytes/(float)blocksize)));
 
     int test = ceil((n_bytes/(float)blocksize));
   
