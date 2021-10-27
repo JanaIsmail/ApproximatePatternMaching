@@ -20,7 +20,7 @@ SRC= apm.c
 
 OBJ= $(OBJ_DIR)/apm.o
 
-all: $(OBJ_DIR) apm apm_cuda apm_mpi apm_mpi_omp
+all: $(OBJ_DIR) apm apm_mpi apm_mpi_omp apm_omp 
 
 $(OBJ_DIR):
 	mkdir $(OBJ_DIR)
@@ -35,6 +35,8 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cu
 apm:$(OBJ_DIR)/apm.o
 	$(CC) $(CFLAGS_SEQ) $(LDFLAGS) -o $@ $^
 
+apm_omp:src/apm_omp.o
+	gcc -fopenmp -o apm_omp $(SRC_DIR)/apm_omp.c
 
 apm_cuda:$(OBJ_DIR)/apm_cuda.o
 	$(NVCC) $(CFLAGS_CUDA)  -o $@ $^ 
