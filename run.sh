@@ -55,5 +55,21 @@ done
 cd $path
 printf "\n" >> output
 
+#MPI
+
+printf "MPI\n" >> output
+pattern=AAAA
+cd ~
+for i in $(seq 2 5); do
+  pattern+=" AAAA"
+  for j in $(seq 2 2 10); do
+    output1=$(mpirun -machinefile $path/machines -n $i $path/apm_mpi $j $approx_factor $path/$dna_sequence $pattern | grep "APM done"  | cut -d " " -f 4 )
+    output2=$(mpirun -machinefile $path/machines -n $i $path/apm_mpi $j $approx_factor $path/$dna_sequence $pattern | grep "APM done"  | cut -d " " -f 4 )
+    output3=$(mpirun -machinefile $path/machines -n $i $path/apm_mpi $j $approx_factor $path/$dna_sequence $pattern | grep "APM done"  | cut -d " " -f 4 )
+    output4=$(mpirun -machinefile $path/machines -n $i $path/apm_mpi $j $approx_factor $path/$dna_sequence $pattern | grep "APM done"  | cut -d " " -f 4 )
+    printf "%d   %d   %s   %s   %s   %s\n" $i $j $output1 $output2 $output3 $output4 >> $path/output
+done
+cd $path
+printf "\n" >> output
 
 cat output
