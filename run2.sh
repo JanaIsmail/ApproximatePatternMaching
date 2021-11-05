@@ -3,6 +3,7 @@
 path=$PWD
 
 rm output_cuda
+rm output_cuda.csv
 dna_sequence=dna/chr2.fa
 approx_factor=3
 pattern=AAAA
