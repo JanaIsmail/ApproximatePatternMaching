@@ -35,7 +35,7 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cu
 apm:$(OBJ_DIR)/apm.o
 	$(CC) $(CFLAGS_SEQ) $(LDFLAGS) -o $@ $^
 
-apm_omp:src/apm_omp.o
+apm_omp:src/apm_omp.c
 	gcc -fopenmp -o apm_omp $(SRC_DIR)/apm_omp.c
 
 apm_cuda:$(OBJ_DIR)/apm_cuda.o
