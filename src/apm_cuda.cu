@@ -18,63 +18,54 @@
 #define APM_DEBUG 0
 
 char *read_input_file(char *filename, int *size) {
-  char *buf;
-  off_t fsize;
-  int fd = 0;
-  int n_bytes = 1;
-
-  /* Open the text file */
-  fd = open(filename, O_RDONLY);
-  if (fd == -1) {
-    fprintf(stderr, "Unable to open the text file <%s>\n", filename);
-    return NULL;
-  }
-
-  /* Get the number of characters in the textfile */
-  fsize = lseek(fd, 0, SEEK_END);
-  lseek(fd, 0, SEEK_SET);
-
-  /* TODO check return of lseek */
-
+    char *buf;
+    off_t fsize;
+    int fd = 0;
+    int n_bytes = 1;    
+    /* Open the text file */
+    fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        fprintf(stderr, "Unable to open the text file <%s>\n", filename);
+        return NULL;
+    }   
+    /* Get the number of characters in the textfile */
+    fsize = lseek(fd, 0, SEEK_END);
+    lseek(fd, 0, SEEK_SET); 
+    /* TODO check return of lseek */    
 #if APM_DEBUG
-  printf("File length: %lld\n", fsize);
+    printf("File length: %lld\n", fsize);
 #endif
 
-  /* Allocate data to copy the target text */
-  buf = (char *)malloc(fsize * sizeof(char));
-  if (buf == NULL) {
-    fprintf(stderr, "Unable to allocate %lld byte(s) for main array\n", fsize);
-    return NULL;
-  }
-
-  n_bytes = read(fd, buf, fsize);
-  if (n_bytes != fsize) {
-    fprintf(stderr,
-            "Unable to copy %lld byte(s) from text file (%d byte(s) copied)\n",
+    /* Allocate data to copy the target text */
+    buf = (char *)malloc(fsize * sizeof(char));
+    if (buf == NULL) {
+        fprintf(stderr, "Unable to allocate %ld byte(s) for main array\n", fsize);
+        return NULL;
+    }   
+    n_bytes = read(fd, buf, fsize);
+    if (n_bytes != fsize) {
+      fprintf(stderr,
+            "Unable to copy %ld byte(s) from text file (%d byte(s) copied)\n",
             fsize, n_bytes);
-    return NULL;
-  }
-
+      return NULL;
+    }   
 #if APM_DEBUG
-  printf("Number of read bytes: %d\n", n_bytes);
+    printf("Number of read bytes: %d\n", n_bytes);
 #endif
 
-  *size = n_bytes;
+    *size = n_bytes;
 
-  close(fd);
+    close(fd);
 
-  return buf;
+    return buf;
 }
 
 #define MIN3(a, b, c)                                                          \
   ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
 
-//__constant__ char * gpu_buf;
-
-__device__ int levenshtein(char *s1, char* gpu_buf, int len, int *column, int j) {
+__device__ int levenshtein(char *s1, char *s2, int len, int *column) {
 
   unsigned int x, y, lastdiag, olddiag;
-
 
   for (y = 1; y <= len; y++) {
     column[y] = y;
@@ -84,7 +75,7 @@ __device__ int levenshtein(char *s1, char* gpu_buf, int len, int *column, int j)
     lastdiag = x - 1;
     for (y = 1; y <= len; y++) {
       olddiag = column[y];
-      column[y] = MIN3(column[y] + 1, column[y - 1] + 1, lastdiag + (s1[y - 1] == gpu_buf[j + x - 1] ? 0 : 1));
+      column[y] = MIN3(column[y] + 1, column[y - 1] + 1, lastdiag + (s1[y - 1] == s2[x - 1] ? 0 : 1));
       lastdiag = olddiag;
     }
   }
@@ -92,41 +83,28 @@ __device__ int levenshtein(char *s1, char* gpu_buf, int len, int *column, int j)
 
 }
 
-
-__global__ void processing(int size_pattern, char * pattern, int n_bytes,char * gpu_buf, int approx_factor, int *n_matches_j ){
-    //printf("HELLO\n");
+__global__ void processing(int size_pattern, char *gpu_buf, char * pattern, int n_bytes, int approx_factor, int *n_matches_j, int *column){
     int j = blockIdx.x*blockDim.x + threadIdx.x;
-
     if(j<n_bytes){
-    int distance = 0;
-    int size;
-    size = size_pattern;
-    int * column = (int*) malloc((size_pattern + 1) * sizeof(int)); 
-    if (n_bytes - j < size_pattern) {
-      size = n_bytes - j;
+      int distance = 0;
+      int size;
+      size = size_pattern; 
+      if (n_bytes - j < size_pattern) {
+        size = n_bytes - j;
+      }
+
+      distance = levenshtein(pattern, &gpu_buf[j], size, &column[j*(size_pattern+1)]);
+
+      if (distance <= approx_factor) {
+        n_matches_j[j] = 1;
+      }
+      else{
+        n_matches_j[j] = 0;
+        }
     }
 
-    distance = levenshtein(pattern, gpu_buf, size, column, j);
 
-    if (distance <= approx_factor) {
-      n_matches_j[j] = 1;
-
-    }
-    else{n_matches_j[j] = 0;}
-
-    free(column);
-
-    }
 }
-
-__global__ void warm_up_gpu(){
-  unsigned int tid = blockIdx.x * blockDim.x + threadIdx.x;
-  float ia, ib;
-  ia = ib = 0.0f;
-  ib += ia + tid; 
-}
-
-
 
 int main(int argc, char **argv) {
   char **pattern;
@@ -205,19 +183,6 @@ int main(int argc, char **argv) {
    * BEGIN MAIN LOOP
    ******/
 
-
-  int blocksize = 1024;
-
-  int real_blocksize = MIN3(blocksize, blocksize, n_bytes);
-
-  dim3 dimBlock (real_blocksize);
-  dim3 dimGrid(ceil((n_bytes/(float)blocksize)));
-
-
-
-  warm_up_gpu<<<dimGrid, dimBlock>>>();
-
-
   /* Timer start */
   gettimeofday(&t1, NULL);
 
@@ -230,36 +195,30 @@ int main(int argc, char **argv) {
      for(int j=0; j<n_bytes; j++){
       n_matches[i]=0;
     }
-    
-
-    int  *gpu_n_matches_j;
 
     n_matches[i] = 0;
 
-    char * gpu_pattern; //, * gpu_buf;A
+    int blocksize = 1024;
+    int real_blocksize = MIN3(blocksize, blocksize, n_bytes);
+    int nb_threads = real_blocksize * ceil((n_bytes/(float)blocksize));
 
-    char * gpu_buf;
-
-
-    cudaMalloc((void **) &gpu_buf, (n_bytes) * sizeof(char));
-
-    cudaMemcpy(gpu_buf, &buf[0],(n_bytes) * sizeof(char), cudaMemcpyHostToDevice );
-
+    char *gpu_pattern , *gpu_buf;
+    int  *gpu_n_matches_j, *column;
 
     cudaMalloc((void **) &gpu_pattern, (size_pattern) * sizeof(char));
-    //cudaMalloc((void **) &gpu_buf, (n_bytes) * sizeof(char));
+    cudaMalloc((void **) &gpu_buf, (n_bytes) * sizeof(char));
     cudaMalloc((void **) &gpu_n_matches_j, (n_bytes) * sizeof(int));
+    cudaMalloc((void **) &column, nb_threads * (size_pattern + 1) * sizeof(int));
 
-    cudaMemcpy(gpu_pattern, pattern[i],(size_pattern) * sizeof(char), cudaMemcpyHostToDevice );
-    //cudaMemcpy(gpu_buf, buf,(n_bytes) * sizeof(char), cudaMemcpyHostToDevice);
-    cudaMemcpy(gpu_n_matches_j,n_matches_j, (n_bytes) * sizeof(int), cudaMemcpyHostToDevice );
+    cudaMemcpy(gpu_pattern, pattern[i], (size_pattern) * sizeof(char), cudaMemcpyHostToDevice );
+    cudaMemcpy(gpu_buf, buf,(n_bytes) * sizeof(char), cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_n_matches_j, n_matches_j, (n_bytes) * sizeof(int), cudaMemcpyHostToDevice );
 
 
-    int test = ceil((n_bytes/(float)blocksize));
+    dim3 dimBlock (real_blocksize);
+    dim3 dimGrid(ceil((n_bytes/(float)blocksize)));
   
-    processing<<<dimGrid, dimBlock>>>(size_pattern, gpu_pattern, n_bytes,gpu_buf,  approx_factor,  gpu_n_matches_j);
-
-    
+    processing<<<dimGrid, dimBlock>>>(size_pattern, gpu_buf, gpu_pattern, n_bytes, approx_factor,  gpu_n_matches_j, column);
 
     cudaMemcpy(n_matches_j, gpu_n_matches_j ,(n_bytes) * sizeof(int), cudaMemcpyDeviceToHost) ;
 
@@ -271,6 +230,7 @@ int main(int argc, char **argv) {
     cudaFree(gpu_pattern);
     cudaFree(gpu_buf);
     cudaFree(gpu_n_matches_j);
+    cudaFree(column);
   }
 
   /* Timer stop */

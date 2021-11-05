@@ -20,7 +20,7 @@ SRC= apm.c
 
 OBJ= $(OBJ_DIR)/apm.o
 
-all: $(OBJ_DIR) apm apm_mpi apm_mpi_omp apm_omp 
+all: $(OBJ_DIR) apm apm_mpi apm_mpi_omp apm_omp apm_cuda
 
 $(OBJ_DIR):
 	mkdir $(OBJ_DIR)
@@ -48,4 +48,4 @@ apm_mpi_omp:$(SRC_DIR)/apm_mpi_omp.c
 	mpicc -fopenmp -o apm_mpi_omp $(SRC_DIR)/apm_mpi_omp.c
 
 clean:
-	rm -f apm apm_cuda $(OBJ) apm_mpi
+	rm -f apm apm_cuda $(OBJ) apm_mpi apm_mpi_omp apm_omp
